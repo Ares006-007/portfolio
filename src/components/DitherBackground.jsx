@@ -10,13 +10,7 @@ varying vec2 v_uv;
 void main() {
   v_uv = a_position * 0.5 + 0.5;
   gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-
-// ============================================================
-// Fragment Shader — Dither wave with mouse interaction
-// Uses WebGL1-compatible GLSL (maximum driver compatibility)
-// ============================================================
-const FRAG_SRC = `
+}`;const FRAG_SRC = `
 precision highp float;
 
 varying vec2 v_uv;
@@ -32,44 +26,24 @@ uniform float u_waveSpeed;
 uniform float u_colorNum;
 uniform float u_mouseRadius;
 
-// 4x4 Bayer dithering — computed without arrays for max compatibility
+// 4x4 Bayer dithering
 float bayer4x4(vec2 pos) {
   vec2 p = mod(floor(pos), 4.0);
   float x = p.x;
   float y = p.y;
-
-  // Row 0: 0, 8, 2, 10
-  // Row 1: 12, 4, 14, 6
-  // Row 2: 3, 11, 1, 9
-  // Row 3: 15, 7, 13, 5
   float val = 0.0;
-
   if (y < 1.0) {
-    if (x < 1.0) val = 0.0;
-    else if (x < 2.0) val = 8.0;
-    else if (x < 3.0) val = 2.0;
-    else val = 10.0;
+    if (x < 1.0) val = 0.0; else if (x < 2.0) val = 8.0; else if (x < 3.0) val = 2.0; else val = 10.0;
   } else if (y < 2.0) {
-    if (x < 1.0) val = 12.0;
-    else if (x < 2.0) val = 4.0;
-    else if (x < 3.0) val = 14.0;
-    else val = 6.0;
+    if (x < 1.0) val = 12.0; else if (x < 2.0) val = 4.0; else if (x < 3.0) val = 14.0; else val = 6.0;
   } else if (y < 3.0) {
-    if (x < 1.0) val = 3.0;
-    else if (x < 2.0) val = 11.0;
-    else if (x < 3.0) val = 1.0;
-    else val = 9.0;
+    if (x < 1.0) val = 3.0; else if (x < 2.0) val = 11.0; else if (x < 3.0) val = 1.0; else val = 9.0;
   } else {
-    if (x < 1.0) val = 15.0;
-    else if (x < 2.0) val = 7.0;
-    else if (x < 3.0) val = 13.0;
-    else val = 5.0;
+    if (x < 1.0) val = 15.0; else if (x < 2.0) val = 7.0; else if (x < 3.0) val = 13.0; else val = 5.0;
   }
-
   return val / 16.0;
 }
 
-// Hash-based noise
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -100,60 +74,76 @@ float fbm(vec2 p) {
 }
 
 void main() {
-  // Pixelate UV coordinates
+  // Pixelate UVs
   vec2 pixelUv = floor(gl_FragCoord.xy / u_pixelSize) * u_pixelSize / u_resolution;
+  
+  // 1. Diagonal continuous flow over time
+  // Shift UVs backward over time so the field flows forward diagonally (bottom-right)
+  vec2 flowDir = vec2(-0.8, -1.0) * (u_waveSpeed * 1.2);
+  vec2 baseUv = pixelUv + u_time * flowDir;
 
-  // Mouse influence
+  // 2. Setup aspect-corrected distance for mouse
   vec2 mouseNorm = u_mouse / u_resolution;
-  float mouseDist = length(pixelUv - mouseNorm);
-  float mouseInfluence = smoothstep(u_mouseRadius, 0.0, mouseDist) * 0.3;
-
-  // Wave distortion
-  float t = u_time * u_waveSpeed;
-  float wave1 = sin(pixelUv.x * u_waveFrequency * 6.2831 + t * 2.0) * u_waveAmplitude;
-  float wave2 = sin(pixelUv.y * u_waveFrequency * 4.0 + t * 1.5 + 1.0) * u_waveAmplitude * 0.7;
-  float wave3 = cos((pixelUv.x + pixelUv.y) * u_waveFrequency * 3.0 + t * 3.0) * u_waveAmplitude * 0.4;
-
-  // FBM noise layer
-  float n = fbm(pixelUv * 4.0 + vec2(t * 0.3, t * 0.2));
-
-  // Combine all layers
-  float value = n * 0.5 + wave1 + wave2 + wave3 + mouseInfluence;
-
-  // Normalize to 0-1
-  value = clamp(value * 0.5 + 0.5, 0.0, 1.0);
-
-  // 4-color palette: dark base -> mid tones -> purple accent
-  vec3 c0 = vec3(0.02, 0.02, 0.04);
-  vec3 c1 = vec3(0.06, 0.04, 0.12);
-  vec3 c2 = u_waveColor * 0.4;
-  vec3 c3 = u_waveColor * 0.7;
-
-  float colorStep = 1.0 / u_colorNum;
-
-  // Apply Bayer dithering
+  float aspect = u_resolution.x / u_resolution.y;
+  vec2 uvAspect = vec2(pixelUv.x * aspect, pixelUv.y);
+  vec2 mouseAspect = vec2(mouseNorm.x * aspect, mouseNorm.y);
+  float mouseDist = length(uvAspect - mouseAspect);
+  
+  // 3. Mouse Repulsion & Clearing effect
+  float clearRadius = 0.25; // Size of the cleared area around cursor
+  vec2 dir = uvAspect - mouseAspect;
+  float pushStrength = smoothstep(clearRadius, 0.0, mouseDist);
+  vec2 safeDir = length(dir) > 0.001 ? normalize(dir) : vec2(0.0);
+  
+  // Repel fluid outward from cursor
+  vec2 warpedUv = baseUv - safeDir * pushStrength * 0.2;
+  
+  // 4. Procedural Fluid Density (Water/Wave field)
+  // Base large flowing structure
+  float n1 = fbm(warpedUv * u_waveFrequency);
+  // Secondary details flowing slightly differently
+  float n2 = fbm(warpedUv * (u_waveFrequency * 2.0) - u_time * vec2(0.02, -0.01));
+  
+  // Combine into an organic fluid density map
+  float density = n1 * 0.7 + n2 * 0.3;
+  
+  // Create natural empty pockets in the flow
+  density = smoothstep(0.2, 0.8, density);
+  
+  // 5. Erase particles around the cursor completely
+  float erase = smoothstep(clearRadius * 1.2, 0.0, mouseDist);
+  density -= erase * 1.5; // Subtract heavily to clear the area
+  density = clamp(density, 0.0, 1.0);
+  
+  // 6. Palette & Dithering
+  vec3 c0 = vec3(0.02, 0.02, 0.04); // Deep dark background (empty pockets)
+  vec3 c1 = vec3(0.08, 0.05, 0.16); // Faint dark purple
+  vec3 c2 = u_waveColor * 0.6;      // Mid purple
+  vec3 c3 = u_waveColor * 1.1;      // Bright purple/white highlights
+  
   float bayerVal = bayer4x4(gl_FragCoord.xy / u_pixelSize);
-  float dithered = value + (bayerVal - 0.5) * (1.0 / u_colorNum);
-
-  // Quantize to palette
+  
+  // Apply dithering threshold
+  float dithered = density + (bayerVal - 0.5) * 0.4;
+  
   vec3 color;
-  if (dithered < colorStep) {
+  if (dithered < 0.25) {
     color = c0;
-  } else if (dithered < colorStep * 2.0) {
+  } else if (dithered < 0.50) {
     color = c1;
-  } else if (dithered < colorStep * 3.0) {
+  } else if (dithered < 0.75) {
     color = c2;
   } else {
     color = c3;
   }
 
-  // Subtle vignette
-  float vignette = 1.0 - smoothstep(0.3, 1.2, length(pixelUv - 0.5) * 1.4);
+  // Soft vignette
+  float vignette = 1.0 - smoothstep(0.4, 1.5, length(pixelUv - 0.5) * 1.2);
   color *= mix(0.6, 1.0, vignette);
 
   gl_FragColor = vec4(color, 1.0);
-}`;
-
+}
+`;
 // ============================================================
 // React Component
 // ============================================================
