@@ -846,6 +846,13 @@ a:hover {
   opacity: 0;
   transition: opacity 2s ease 0.5s;
   pointer-events: none;
+  
+  /* Subtle dark backing treatment for contrast against bright wave pockets */
+  padding: 8px 24px;
+  background: rgba(5, 5, 8, 0.5);
+  backdrop-filter: blur(3px);
+  border-radius: 20px;
+  border: 1px solid rgba(108, 59, 255, 0.08);
 }
 
 .landing-discovery-prompt.visible {
@@ -855,9 +862,12 @@ a:hover {
 .landing-discovery-prompt span {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--text-dim);
+  /* Brighter pale violet/lavender text instead of dim */
+  color: #e0d6ff;
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  /* Soft text shadow to detach it from the dither texture */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(108, 59, 255, 0.2);
 }
 
 /* Hidden button */
