@@ -3,10 +3,10 @@ import { useEffect, useRef, useCallback } from "react";
 // ============================================================
 // Vertex Shader — Full-screen quad
 // ============================================================
-const VERT_SRC = `#version 300 es
+const VERT_SRC = `
 precision highp float;
-in vec2 a_position;
-out vec2 v_uv;
+attribute vec2 a_position;
+varying vec2 v_uv;
 void main() {
   v_uv = a_position * 0.5 + 0.5;
   gl_Position = vec4(a_position, 0.0, 1.0);
@@ -14,12 +14,12 @@ void main() {
 
 // ============================================================
 // Fragment Shader — Dither wave with mouse interaction
+// Uses WebGL1-compatible GLSL (maximum driver compatibility)
 // ============================================================
-const FRAG_SRC = `#version 300 es
+const FRAG_SRC = `
 precision highp float;
 
-in vec2 v_uv;
-out vec4 fragColor;
+varying vec2 v_uv;
 
 uniform float u_time;
 uniform vec2 u_resolution;
@@ -32,21 +32,44 @@ uniform float u_waveSpeed;
 uniform float u_colorNum;
 uniform float u_mouseRadius;
 
-// 4x4 Bayer dithering matrix (normalized 0-1)
-float bayer4x4(vec2 p) {
-  ivec2 ip = ivec2(mod(p, 4.0));
-  int idx = ip.x + ip.y * 4;
-  // Standard Bayer 4x4 pattern
-  int m[16] = int[16](
-     0,  8,  2, 10,
-    12,  4, 14,  6,
-     3, 11,  1,  9,
-    15,  7, 13,  5
-  );
-  return float(m[idx]) / 16.0;
+// 4x4 Bayer dithering — computed without arrays for max compatibility
+float bayer4x4(vec2 pos) {
+  vec2 p = mod(floor(pos), 4.0);
+  float x = p.x;
+  float y = p.y;
+
+  // Row 0: 0, 8, 2, 10
+  // Row 1: 12, 4, 14, 6
+  // Row 2: 3, 11, 1, 9
+  // Row 3: 15, 7, 13, 5
+  float val = 0.0;
+
+  if (y < 1.0) {
+    if (x < 1.0) val = 0.0;
+    else if (x < 2.0) val = 8.0;
+    else if (x < 3.0) val = 2.0;
+    else val = 10.0;
+  } else if (y < 2.0) {
+    if (x < 1.0) val = 12.0;
+    else if (x < 2.0) val = 4.0;
+    else if (x < 3.0) val = 14.0;
+    else val = 6.0;
+  } else if (y < 3.0) {
+    if (x < 1.0) val = 3.0;
+    else if (x < 2.0) val = 11.0;
+    else if (x < 3.0) val = 1.0;
+    else val = 9.0;
+  } else {
+    if (x < 1.0) val = 15.0;
+    else if (x < 2.0) val = 7.0;
+    else if (x < 3.0) val = 13.0;
+    else val = 5.0;
+  }
+
+  return val / 16.0;
 }
 
-// Smooth noise function for organic wave patterns
+// Hash-based noise
 float hash(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -100,21 +123,20 @@ void main() {
   // Normalize to 0-1
   value = clamp(value * 0.5 + 0.5, 0.0, 1.0);
 
-  // Build color palette: dark base -> mid tones -> purple accent
-  vec3 color;
-  float colorStep = 1.0 / u_colorNum;
+  // 4-color palette: dark base -> mid tones -> purple accent
+  vec3 c0 = vec3(0.02, 0.02, 0.04);
+  vec3 c1 = vec3(0.06, 0.04, 0.12);
+  vec3 c2 = u_waveColor * 0.4;
+  vec3 c3 = u_waveColor * 0.7;
 
-  // 4-color palette
-  vec3 c0 = vec3(0.02, 0.02, 0.04);                           // near black
-  vec3 c1 = vec3(0.06, 0.04, 0.12);                            // deep purple-black
-  vec3 c2 = u_waveColor * 0.4;                                  // muted purple
-  vec3 c3 = u_waveColor * 0.7;                                  // brighter purple
+  float colorStep = 1.0 / u_colorNum;
 
   // Apply Bayer dithering
   float bayerVal = bayer4x4(gl_FragCoord.xy / u_pixelSize);
   float dithered = value + (bayerVal - 0.5) * (1.0 / u_colorNum);
 
   // Quantize to palette
+  vec3 color;
   if (dithered < colorStep) {
     color = c0;
   } else if (dithered < colorStep * 2.0) {
@@ -129,7 +151,7 @@ void main() {
   float vignette = 1.0 - smoothstep(0.3, 1.2, length(pixelUv - 0.5) * 1.4);
   color *= mix(0.6, 1.0, vignette);
 
-  fragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color, 1.0);
 }`;
 
 // ============================================================
@@ -142,15 +164,36 @@ export default function DitherBackground() {
   const reducedMotion = useRef(false);
 
   const initGL = useCallback((canvas) => {
-    const gl = canvas.getContext("webgl2", {
+    // Try WebGL2 first, fall back to WebGL1
+    let gl = canvas.getContext("webgl2", {
       antialias: false,
       alpha: false,
       powerPreference: "high-performance",
     });
+
+    let isWebGL2 = !!gl;
+
     if (!gl) {
-      console.warn("WebGL2 not supported");
+      gl = canvas.getContext("webgl", {
+        antialias: false,
+        alpha: false,
+        powerPreference: "high-performance",
+      });
+    }
+
+    if (!gl) {
+      gl = canvas.getContext("experimental-webgl", {
+        antialias: false,
+        alpha: false,
+      });
+    }
+
+    if (!gl) {
+      console.error("[DitherBackground] No WebGL support found.");
       return null;
     }
+
+    console.log("[DitherBackground] Using", isWebGL2 ? "WebGL2" : "WebGL1");
 
     // Compile shader
     function compileShader(type, src) {
@@ -158,7 +201,10 @@ export default function DitherBackground() {
       gl.shaderSource(s, src);
       gl.compileShader(s);
       if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-        console.error("Shader compile error:", gl.getShaderInfoLog(s));
+        console.error(
+          "[DitherBackground] Shader compile error:",
+          gl.getShaderInfoLog(s)
+        );
         gl.deleteShader(s);
         return null;
       }
@@ -167,7 +213,10 @@ export default function DitherBackground() {
 
     const vs = compileShader(gl.VERTEX_SHADER, VERT_SRC);
     const fs = compileShader(gl.FRAGMENT_SHADER, FRAG_SRC);
-    if (!vs || !fs) return null;
+    if (!vs || !fs) {
+      console.error("[DitherBackground] Shader compilation failed.");
+      return null;
+    }
 
     const program = gl.createProgram();
     gl.attachShader(program, vs);
@@ -175,14 +224,14 @@ export default function DitherBackground() {
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error("Program link error:", gl.getProgramInfoLog(program));
+      console.error(
+        "[DitherBackground] Program link error:",
+        gl.getProgramInfoLog(program)
+      );
       return null;
     }
 
     // Full-screen quad
-    const vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     // prettier-ignore
@@ -220,7 +269,8 @@ export default function DitherBackground() {
     gl.uniform1f(uniforms.u_colorNum, 4.0);
     gl.uniform1f(uniforms.u_mouseRadius, 1.0);
 
-    return { gl, program, vao, uniforms };
+    console.log("[DitherBackground] WebGL initialized successfully.");
+    return { gl, program, uniforms };
   }, []);
 
   useEffect(() => {
@@ -237,31 +287,46 @@ export default function DitherBackground() {
 
     // Init WebGL
     const ctx = initGL(canvas);
-    if (!ctx) return;
+    if (!ctx) {
+      // Fallback: paint the canvas dark so it's not white
+      const ctx2d = canvas.getContext("2d");
+      if (ctx2d) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        ctx2d.fillStyle = "#050508";
+        ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
 
-    const { gl, uniforms, vao } = ctx;
+    const { gl, uniforms } = ctx;
 
     // Resize handler
     function resize() {
       const dpr = Math.min(window.devicePixelRatio, 2);
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
+      if (w === 0 || h === 0) return; // Guard against zero dimensions
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
     }
     resize();
+
+    // Retry resize after a short delay to handle layout shifts
+    const resizeRetry = setTimeout(resize, 100);
+
     window.addEventListener("resize", resize);
 
-    // Mouse handler
+    // Mouse handler — listen on window, not just canvas
     function handleMouse(e) {
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio, 2);
       mouseRef.current.x = (e.clientX - rect.left) * dpr;
       mouseRef.current.y = (rect.height - (e.clientY - rect.top)) * dpr;
     }
-    canvas.addEventListener("mousemove", handleMouse);
+    window.addEventListener("mousemove", handleMouse);
 
     // Touch handler
     function handleTouch(e) {
@@ -274,16 +339,15 @@ export default function DitherBackground() {
           (rect.height - (touch.clientY - rect.top)) * dpr;
       }
     }
-    canvas.addEventListener("touchmove", handleTouch, { passive: true });
+    window.addEventListener("touchmove", handleTouch, { passive: true });
 
     // Render loop
-    let startTime = performance.now();
+    const startTime = performance.now();
     let frozenTime = 0;
 
     function render() {
       let elapsed;
       if (reducedMotion.current) {
-        // Show a static frame at t=5 for visual interest
         if (frozenTime === 0) frozenTime = 5.0;
         elapsed = frozenTime;
       } else {
@@ -297,7 +361,6 @@ export default function DitherBackground() {
         mouseRef.current.y
       );
 
-      gl.bindVertexArray(vao);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
       animRef.current = requestAnimationFrame(render);
@@ -308,9 +371,10 @@ export default function DitherBackground() {
     // Cleanup
     return () => {
       cancelAnimationFrame(animRef.current);
+      clearTimeout(resizeRetry);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousemove", handleMouse);
-      canvas.removeEventListener("touchmove", handleTouch);
+      window.removeEventListener("mousemove", handleMouse);
+      window.removeEventListener("touchmove", handleTouch);
       mq.removeEventListener("change", handleMotionChange);
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
