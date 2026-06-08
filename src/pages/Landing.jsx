@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DitherBackground from "../components/DitherBackground";
+import AsciiLaunchOverlay from "../components/AsciiLaunchOverlay";
 
 // ============================================================
 // Landing Page — Dither intro → Quote → Hidden discovery button
@@ -8,6 +9,7 @@ import DitherBackground from "../components/DitherBackground";
 export default function Landing() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState("intro"); // intro → quote → active
+  const [isLaunching, setIsLaunching] = useState(false);
   const buttonRef = useRef(null);
   const containerRef = useRef(null);
   const reducedMotion = useRef(false);
@@ -42,7 +44,7 @@ export default function Landing() {
 
   // Handle density sampling from the WebGL background
   const handleSample = useCallback((redVal) => {
-    if (phase !== "active") return;
+    if (phase !== "active" || isLaunching) return;
 
     // Based on shader palette: c0 (empty void) is red ~5, c1 is ~20
     // If it's <= 25, it's considered an empty pocket
@@ -57,12 +59,14 @@ export default function Landing() {
         targetOpacityRef.current = 0.0;
       }, 600); 
     }
-  }, [phase]);
+  }, [phase, isLaunching]);
 
   // High-performance DOM animation loop for button opacity
   useEffect(() => {
     let animId;
     const loop = () => {
+      if (isLaunching) return; // Stop updating if launching
+      
       // Smooth interpolation
       opacityRef.current += (targetOpacityRef.current - opacityRef.current) * 0.1;
       
@@ -76,11 +80,15 @@ export default function Landing() {
     };
     loop();
     return () => cancelAnimationFrame(animId);
-  }, []);
+  }, [isLaunching]);
 
-  // Enter portfolio
+  // Trigger launch sequence
   function enterPortfolio() {
-    navigate("/portfolio");
+    if (reducedMotion.current) {
+      navigate("/portfolio");
+    } else {
+      setIsLaunching(true);
+    }
   }
 
   // Keyboard accessibility
@@ -93,11 +101,15 @@ export default function Landing() {
 
   return (
     <div className="landing-wrapper" ref={containerRef}>
+      {/* If launching, the overlay takes over visually */}
+      {isLaunching && <AsciiLaunchOverlay onComplete={() => navigate("/portfolio")} />}
+      
       <DitherBackground samplePct={buttonPct} onSample={handleSample} />
 
       {/* Quote overlay */}
       <div
         className={`landing-content ${phase === "quote" || phase === "active" ? "visible" : ""}`}
+        style={{ opacity: isLaunching ? 0 : undefined, transition: "opacity 0.3s ease" }}
       >
         <div className="landing-quote-block">
           <p className="landing-arabic" dir="rtl" lang="ar">
@@ -111,13 +123,13 @@ export default function Landing() {
 
       {/* Discovery prompt */}
       <div
-        className={`landing-discovery-prompt ${phase === "active" ? "visible" : ""}`}
+        className={`landing-discovery-prompt ${phase === "active" && !isLaunching ? "visible" : ""}`}
       >
         <span>Move your cursor. Find the way in.</span>
       </div>
 
       {/* Hidden button tied to Dither pockets */}
-      {phase === "active" && (
+      {phase === "active" && !isLaunching && (
         <button
           ref={buttonRef}
           className="landing-hidden-btn"
@@ -140,16 +152,18 @@ export default function Landing() {
       )}
 
       {/* Skip for accessibility — always available via keyboard */}
-      <a
-        href="/portfolio"
-        className="landing-skip"
-        onClick={(e) => {
-          e.preventDefault();
-          enterPortfolio();
-        }}
-      >
-        Skip to portfolio
-      </a>
+      {!isLaunching && (
+        <a
+          href="/portfolio"
+          className="landing-skip"
+          onClick={(e) => {
+            e.preventDefault();
+            enterPortfolio();
+          }}
+        >
+          Skip to portfolio
+        </a>
+      )}
     </div>
   );
 }

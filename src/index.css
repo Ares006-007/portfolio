@@ -1051,3 +1051,76 @@ a:hover {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================ */
+/* ASCII Launch Overlay                                         */
+/* ============================================================ */
+.ascii-launch-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-deep);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.ascii-rocket-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Will be translated smoothly by JS */
+  will-change: transform;
+  padding-bottom: 20vh;
+}
+
+.ascii-rocket-body,
+.ascii-flame,
+.ascii-terminal-readout p {
+  font-family: var(--font-mono);
+  white-space: pre;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.ascii-rocket-body {
+  color: var(--text-primary);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+.ascii-flame {
+  /* Very subtle pale violet/lavender tint as requested */
+  color: #e0d6ff;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(108, 59, 255, 0.6), 0 0 20px rgba(108, 59, 255, 0.3);
+}
+
+.ascii-terminal-readout {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ascii-terminal-readout p {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  animation: typeFlicker 0.1s infinite alternate;
+}
+
+@keyframes typeFlicker {
+  0% { opacity: 0.9; }
+  100% { opacity: 1; }
+}
+
