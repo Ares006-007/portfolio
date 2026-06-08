@@ -8,24 +8,26 @@ import DitherBackground from "../components/DitherBackground";
 export default function Landing() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState("intro"); // intro → quote → active
-  const [buttonOpacity, setButtonOpacity] = useState(0);
-  const [hintVisible, setHintVisible] = useState(false);
-  const [fallbackActive, setFallbackActive] = useState(false);
   const buttonRef = useRef(null);
-  const buttonPosRef = useRef({ x: 0, y: 0 });
   const containerRef = useRef(null);
   const reducedMotion = useRef(false);
-  const isMobile = useRef(false);
 
-  // Detect reduced motion and mobile
+  // Single random anchor position (percentage-based) chosen once per refresh
+  const [buttonPct] = useState(() => ({
+    // Keep it somewhat lower/side so it doesn't overlap text
+    x: 0.65 + Math.random() * 0.25, // 65% to 90%
+    y: 0.60 + Math.random() * 0.25, // 60% to 85%
+  }));
+
+  const opacityRef = useRef(0);
+  const targetOpacityRef = useRef(0);
+  const persistTimeoutRef = useRef(null);
+
+  // Phase transitions
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotion.current = mq.matches;
 
-    isMobile.current =
-      "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
-    // Phase transitions
     const introDelay = reducedMotion.current ? 500 : 2000;
     const quoteDelay = reducedMotion.current ? 300 : 1500;
 
@@ -38,94 +40,50 @@ export default function Landing() {
     };
   }, []);
 
-  // Place hidden button at a discoverable position
-  useEffect(() => {
-    function placeButton() {
-      // Place in the lower-right quadrant — discoverable but not obvious
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      buttonPosRef.current = {
-        x: vw * 0.7 + Math.random() * (vw * 0.15),
-        y: vh * 0.65 + Math.random() * (vh * 0.15),
-      };
-    }
-    placeButton();
-    window.addEventListener("resize", placeButton);
-    return () => window.removeEventListener("resize", placeButton);
-  }, []);
-
-  // Fallback: after 12 seconds, make button easier to find
-  useEffect(() => {
+  // Handle density sampling from the WebGL background
+  const handleSample = useCallback((redVal) => {
     if (phase !== "active") return;
 
-    const fallbackTimer = setTimeout(() => {
-      setFallbackActive(true);
-    }, 12000);
+    // Based on shader palette: c0 (empty void) is red ~5, c1 is ~20
+    // If it's <= 25, it's considered an empty pocket
+    const isEmpty = redVal <= 25;
 
-    // On mobile, show hint faster and make button more visible
-    let mobileTimer;
-    if (isMobile.current) {
-      mobileTimer = setTimeout(() => {
-        setFallbackActive(true);
-        setHintVisible(true);
-      }, 5000);
+    if (isEmpty) {
+      targetOpacityRef.current = 1.0;
+      
+      // Keep it visible for a short window even if the pocket slightly shifts
+      if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+      persistTimeoutRef.current = setTimeout(() => {
+        targetOpacityRef.current = 0.0;
+      }, 600); 
     }
-
-    return () => {
-      clearTimeout(fallbackTimer);
-      if (mobileTimer) clearTimeout(mobileTimer);
-    };
   }, [phase]);
 
-  // Mouse proximity detection for button reveal
-  const handleMouseMove = useCallback(
-    (e) => {
-      if (phase !== "active") return;
-
-      const bx = buttonPosRef.current.x;
-      const by = buttonPosRef.current.y;
-      const dist = Math.sqrt((e.clientX - bx) ** 2 + (e.clientY - by) ** 2);
-
-      // Reveal radius: 200px for glow, 120px for solid visibility
-      const maxRadius = 220;
-      if (dist < maxRadius) {
-        const opacity = Math.max(0, 1 - dist / maxRadius);
-        setButtonOpacity(Math.min(1, opacity * 1.5));
-        if (opacity > 0.3) setHintVisible(true);
-      } else {
-        setButtonOpacity((prev) => Math.max(0, prev - 0.02));
+  // High-performance DOM animation loop for button opacity
+  useEffect(() => {
+    let animId;
+    const loop = () => {
+      // Smooth interpolation
+      opacityRef.current += (targetOpacityRef.current - opacityRef.current) * 0.1;
+      
+      if (buttonRef.current) {
+        const op = opacityRef.current;
+        buttonRef.current.style.opacity = op;
+        buttonRef.current.style.transform = `translate(-50%, -50%) scale(${0.8 + op * 0.2})`;
+        buttonRef.current.style.pointerEvents = op > 0.15 ? "auto" : "none";
       }
-    },
-    [phase]
-  );
-
-  // Touch proximity for mobile
-  const handleTouchMove = useCallback(
-    (e) => {
-      if (phase !== "active" || !e.touches.length) return;
-      const touch = e.touches[0];
-      const bx = buttonPosRef.current.x;
-      const by = buttonPosRef.current.y;
-      const dist = Math.sqrt(
-        (touch.clientX - bx) ** 2 + (touch.clientY - by) ** 2
-      );
-
-      const maxRadius = 160;
-      if (dist < maxRadius) {
-        const opacity = Math.max(0, 1 - dist / maxRadius);
-        setButtonOpacity(Math.min(1, opacity * 2));
-        setHintVisible(true);
-      }
-    },
-    [phase]
-  );
+      animId = requestAnimationFrame(loop);
+    };
+    loop();
+    return () => cancelAnimationFrame(animId);
+  }, []);
 
   // Enter portfolio
   function enterPortfolio() {
     navigate("/portfolio");
   }
 
-  // Keyboard accessibility: allow Tab + Enter
+  // Keyboard accessibility
   function handleKeyDown(e) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -133,18 +91,9 @@ export default function Landing() {
     }
   }
 
-  const baseButtonOpacity = fallbackActive
-    ? Math.max(buttonOpacity, 0.35)
-    : buttonOpacity;
-
   return (
-    <div
-      className="landing-wrapper"
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onTouchMove={handleTouchMove}
-    >
-      <DitherBackground />
+    <div className="landing-wrapper" ref={containerRef}>
+      <DitherBackground samplePct={buttonPct} onSample={handleSample} />
 
       {/* Quote overlay */}
       <div
@@ -167,21 +116,22 @@ export default function Landing() {
         <span>Move your cursor. Find the way in.</span>
       </div>
 
-      {/* Hidden button */}
+      {/* Hidden button tied to Dither pockets */}
       {phase === "active" && (
         <button
           ref={buttonRef}
           className="landing-hidden-btn"
           onClick={enterPortfolio}
           onKeyDown={handleKeyDown}
+          onFocus={() => (targetOpacityRef.current = 1.0)}
+          onBlur={() => (targetOpacityRef.current = 0.0)}
           tabIndex={0}
           aria-label="Enter portfolio"
           style={{
-            left: `${buttonPosRef.current.x}px`,
-            top: `${buttonPosRef.current.y}px`,
-            opacity: baseButtonOpacity,
-            transform: `translate(-50%, -50%) scale(${0.8 + baseButtonOpacity * 0.2})`,
-            pointerEvents: baseButtonOpacity > 0.15 ? "auto" : "none",
+            left: `${buttonPct.x * 100}vw`,
+            top: `${buttonPct.y * 100}vh`,
+            opacity: 0, // JS animation loop handles this
+            pointerEvents: "none",
           }}
         >
           <span className="landing-btn-glow" />

@@ -147,7 +147,7 @@ void main() {
 // ============================================================
 // React Component
 // ============================================================
-export default function DitherBackground() {
+export default function DitherBackground({ samplePct, onSample }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
@@ -330,6 +330,7 @@ export default function DitherBackground() {
 
     // Render loop
     const startTime = performance.now();
+    let frameCount = 0;
 
     function render() {
       // ALWAYS advance time, never freeze, to ensure continuous wave motion
@@ -339,6 +340,20 @@ export default function DitherBackground() {
       gl.uniform2f(uniforms.u_mouse, mouseRef.current.x, mouseRef.current.y);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      // Read pixel brightness for interaction logic if requested
+      if (samplePct && onSample) {
+        frameCount++;
+        if (frameCount % 6 === 0) { // Sample ~10 times per second
+          const dpr = Math.min(window.devicePixelRatio, 2);
+          const px = Math.floor(samplePct.x * canvas.clientWidth * dpr);
+          const py = Math.floor((1.0 - samplePct.y) * canvas.clientHeight * dpr);
+          
+          const pixel = new Uint8Array(4);
+          gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+          onSample(pixel[0]);
+        }
+      }
 
       animRef.current = requestAnimationFrame(render);
     }
@@ -355,7 +370,7 @@ export default function DitherBackground() {
       window.removeEventListener("touchmove", handleTouch);
       mq.removeEventListener("change", handleMotionChange);
     };
-  }, [initGL]);
+  }, [initGL, samplePct, onSample]);
 
   return (
     <div className="hero-canvas-container" aria-hidden="true">
