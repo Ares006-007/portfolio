@@ -277,6 +277,10 @@ export default function DitherBackground() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // Prevent double initialization in React Strict Mode
+    if (canvas.__webglInitialized) return;
+    canvas.__webglInitialized = true;
+
     // Check reduced motion preference
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotion.current = mq.matches;
@@ -370,13 +374,14 @@ export default function DitherBackground() {
 
     // Cleanup
     return () => {
+      canvas.__webglInitialized = false; // allow re-init if component actually remounts
       cancelAnimationFrame(animRef.current);
       clearTimeout(resizeRetry);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouse);
       window.removeEventListener("touchmove", handleTouch);
       mq.removeEventListener("change", handleMotionChange);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      // Removed gl.loseContext() as it permanently kills the canvas in StrictMode
     };
   }, [initGL]);
 
