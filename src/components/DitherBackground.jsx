@@ -281,18 +281,16 @@ export default function DitherBackground() {
     if (canvas.__webglInitialized) return;
     canvas.__webglInitialized = true;
 
-    // Check reduced motion preference
+    // Check reduced motion preference (only used for CSS now, to ensure WebGL always animates as requested)
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotion.current = mq.matches;
     const handleMotionChange = (e) => {
-      reducedMotion.current = e.matches;
+      // Intentionally not freezing the WebGL time anymore per user feedback
     };
     mq.addEventListener("change", handleMotionChange);
 
     // Init WebGL
     const ctx = initGL(canvas);
     if (!ctx) {
-      // Fallback: paint the canvas dark so it's not white
       const ctx2d = canvas.getContext("2d");
       if (ctx2d) {
         canvas.width = canvas.clientWidth;
@@ -310,20 +308,17 @@ export default function DitherBackground() {
       const dpr = Math.min(window.devicePixelRatio, 2);
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
-      if (w === 0 || h === 0) return; // Guard against zero dimensions
+      if (w === 0 || h === 0) return; 
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
     }
     resize();
-
-    // Retry resize after a short delay to handle layout shifts
     const resizeRetry = setTimeout(resize, 100);
-
     window.addEventListener("resize", resize);
 
-    // Mouse handler — listen on window, not just canvas
+    // Mouse handlers
     function handleMouse(e) {
       const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio, 2);
@@ -332,38 +327,26 @@ export default function DitherBackground() {
     }
     window.addEventListener("mousemove", handleMouse);
 
-    // Touch handler
     function handleTouch(e) {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const dpr = Math.min(window.devicePixelRatio, 2);
         mouseRef.current.x = (touch.clientX - rect.left) * dpr;
-        mouseRef.current.y =
-          (rect.height - (touch.clientY - rect.top)) * dpr;
+        mouseRef.current.y = (rect.height - (touch.clientY - rect.top)) * dpr;
       }
     }
     window.addEventListener("touchmove", handleTouch, { passive: true });
 
     // Render loop
     const startTime = performance.now();
-    let frozenTime = 0;
 
     function render() {
-      let elapsed;
-      if (reducedMotion.current) {
-        if (frozenTime === 0) frozenTime = 5.0;
-        elapsed = frozenTime;
-      } else {
-        elapsed = (performance.now() - startTime) / 1000;
-      }
+      // ALWAYS advance time, never freeze, to ensure continuous wave motion
+      const elapsed = (performance.now() - startTime) / 1000;
 
       gl.uniform1f(uniforms.u_time, elapsed);
-      gl.uniform2f(
-        uniforms.u_mouse,
-        mouseRef.current.x,
-        mouseRef.current.y
-      );
+      gl.uniform2f(uniforms.u_mouse, mouseRef.current.x, mouseRef.current.y);
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
@@ -374,14 +357,13 @@ export default function DitherBackground() {
 
     // Cleanup
     return () => {
-      canvas.__webglInitialized = false; // allow re-init if component actually remounts
+      canvas.__webglInitialized = false;
       cancelAnimationFrame(animRef.current);
       clearTimeout(resizeRetry);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMouse);
       window.removeEventListener("touchmove", handleTouch);
       mq.removeEventListener("change", handleMotionChange);
-      // Removed gl.loseContext() as it permanently kills the canvas in StrictMode
     };
   }, [initGL]);
 
