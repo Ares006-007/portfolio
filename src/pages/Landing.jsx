@@ -52,12 +52,12 @@ export default function Landing() {
 
     if (isEmpty) {
       targetOpacityRef.current = 1.0;
-      
+
       // Keep it visible for a short window even if the pocket slightly shifts
       if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
       persistTimeoutRef.current = setTimeout(() => {
         targetOpacityRef.current = 0.0;
-      }, 600); 
+      }, 600);
     }
   }, [phase, isLaunching]);
 
@@ -66,10 +66,10 @@ export default function Landing() {
     let animId;
     const loop = () => {
       if (isLaunching) return; // Stop updating if launching
-      
+
       // Smooth interpolation
       opacityRef.current += (targetOpacityRef.current - opacityRef.current) * 0.1;
-      
+
       if (buttonRef.current) {
         const op = opacityRef.current;
         buttonRef.current.style.opacity = op;
@@ -103,7 +103,7 @@ export default function Landing() {
     <div className="landing-wrapper" ref={containerRef}>
       {/* If launching, the overlay takes over visually */}
       {isLaunching && <AsciiLaunchOverlay onComplete={() => navigate("/portfolio")} />}
-      
+
       <DitherBackground samplePct={buttonPct} onSample={handleSample} />
 
       {/* Quote overlay */}

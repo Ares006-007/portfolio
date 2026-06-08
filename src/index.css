@@ -253,8 +253,15 @@ a:hover {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 .scroll-indicator {
@@ -282,8 +289,15 @@ a:hover {
 }
 
 @keyframes scrollPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 /* ============================================================
@@ -846,7 +860,7 @@ a:hover {
   opacity: 0;
   transition: opacity 2s ease 0.5s;
   pointer-events: none;
-  
+
   /* Subtle dark backing treatment for contrast against bright wave pockets */
   padding: 8px 24px;
   background: rgba(5, 5, 8, 0.5);
@@ -1120,7 +1134,11 @@ a:hover {
 }
 
 @keyframes typeFlicker {
-  0% { opacity: 0.9; }
-  100% { opacity: 1; }
-}
+  0% {
+    opacity: 0.9;
+  }
 
+  100% {
+    opacity: 1;
+  }
+}
