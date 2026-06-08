@@ -811,43 +811,52 @@ a:hover {
   justify-content: center;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 1.6s ease, transform 1.6s ease;
+  animation: fadeInLoad 1.2s ease-out forwards;
 }
 
-.landing-content.visible {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes fadeInLoad {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 .landing-quote-block {
   text-align: center;
   max-width: 700px;
-  padding: var(--space-2xl);
-  background: rgba(5, 5, 8, 0.6);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(108, 59, 255, 0.06);
-  border-radius: 4px;
+  padding: var(--space-2xl) 3.5rem;
+  /* Richer, deeper atmospheric tone instead of a muddy flat block */
+  background: radial-gradient(circle at center, rgba(12, 10, 18, 0.65) 0%, rgba(5, 4, 8, 0.85) 100%);
+  /* Cleaner backdrop blur rather than a foggy overall softness */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(108, 59, 255, 0.12);
+  border-radius: 6px;
+  /* Subtle vignette inner shadow and structural drop shadow */
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .landing-arabic {
   font-family: "Amiri", "Traditional Arabic", serif;
   font-size: clamp(1.8rem, 5vw, 3rem);
   font-weight: 700;
-  color: var(--text-primary);
+  /* Brighter, sharper, more luminous */
+  color: #ffffff;
   line-height: 1.5;
   margin-bottom: var(--space-lg);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  /* Very restrained text shadow for crisp contrast */
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
 }
 
 .landing-translation {
   font-family: var(--font-body);
   font-size: clamp(0.9rem, 2vw, 1.1rem);
-  color: var(--text-muted);
+  /* More readable muted off-white / lavender-gray */
+  color: #d1c8e8;
   font-style: italic;
-  font-weight: 300;
+  font-weight: 400; /* Increased from 300 for readability */
   letter-spacing: 0.03em;
   line-height: var(--leading-relaxed);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* Discovery prompt */
@@ -857,20 +866,29 @@ a:hover {
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
-  opacity: 0;
-  transition: opacity 2s ease 0.5s;
   pointer-events: none;
-
+  
   /* Subtle dark backing treatment for contrast against bright wave pockets */
   padding: 8px 24px;
   background: rgba(5, 5, 8, 0.5);
   backdrop-filter: blur(3px);
   border-radius: 20px;
   border: 1px solid rgba(108, 59, 255, 0.08);
+
+  /* Fade in smoothly after a short delay relative to quote */
+  opacity: 0;
+  animation: fadeInPrompt 2s ease forwards 0.8s;
 }
 
-.landing-discovery-prompt.visible {
-  opacity: 1;
+@keyframes fadeInPrompt {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.landing-discovery-prompt.hidden {
+  opacity: 0 !important;
+  animation: none;
+  transition: opacity 0.3s ease;
 }
 
 .landing-discovery-prompt span {
