@@ -2,10 +2,10 @@ import { contact } from "../data/content";
 
 export default function Contact() {
   const links = [
-    { label: "email", value: contact.email, href: `mailto:${contact.email}` },
-    { label: "github", value: contact.github, href: contact.github },
-    { label: "linkedin", value: contact.linkedin, href: contact.linkedin },
-    { label: "twitter", value: contact.twitter, href: contact.twitter },
+    { label: "EMAIL", value: contact.email, href: `mailto:${contact.email}`, port: "25/tcp", status: "open", service: "smtp" },
+    { label: "GITHUB", value: contact.github, href: contact.github, port: "443/tcp", status: "open", service: "https-git" },
+    { label: "LINKEDIN", value: contact.linkedin, href: contact.linkedin, port: "443/tcp", status: "open", service: "https-in" },
+    { label: "TWITTER", value: contact.twitter, href: contact.twitter, port: "443/tcp", status: "open", service: "https-x" },
   ];
 
   return (
@@ -17,38 +17,48 @@ export default function Contact() {
         <span className="cli-char">:</span>
         <span className="cli-path">~</span>
         <span className="cli-char">$</span>
-        <span className="cli-command">ping connections --resolve</span>
+        <span className="cli-command">nmap -p- -sV shaik.local</span>
       </div>
 
       <div className="cli-output">
-        <div className="cli-output-block">
-          <p style={{ color: 'var(--cli-muted)', marginBottom: '1.5rem' }}>
-            PING connections (127.0.0.1) 56(84) bytes of data.
-            <br/>
-            Resolving secure channels...
-          </p>
+        <div className="cli-output-block" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}>
+          <div style={{ color: 'var(--text-dim)', marginBottom: '1.5rem', lineHeight: '1.4' }}>
+            Starting Nmap 7.93 ( https://nmap.org ) at {new Date().toISOString().split('T')[0]} 00:00 UTC<br />
+            Nmap scan report for shaik.local (192.168.1.100)<br />
+            Host is up (0.0024s latency).<br />
+            Not shown: 65531 closed tcp ports (reset)
+          </div>
 
-          <div className="contact-links" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '80px 60px 100px 1fr', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontWeight: 'bold', whiteSpace: 'nowrap', overflowX: 'auto' }}>
+            <span>PORT</span>
+            <span>STATE</span>
+            <span>SERVICE</span>
+            <span>ENDPOINT</span>
+          </div>
+
+          <div className="contact-links" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem', overflowX: 'auto' }}>
             {links.map((link) => (
-              <div key={link.label} style={{ display: 'flex', gap: '1rem' }}>
-                <span style={{ width: '100px', color: 'var(--cli-accent)', fontWeight: 'bold' }}>
-                  {link.label.toUpperCase()}
-                </span>
-                <span className="cli-char">=&gt;</span>
-                <span>
-                  <a href={link.href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--cli-text)', textDecoration: 'underline', textDecorationColor: 'var(--cli-border)', textUnderlineOffset: '4px' }}>
+              <div key={link.label} style={{ display: 'grid', gridTemplateColumns: '80px 60px 100px 1fr', gap: '1rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ color: 'var(--accent)' }}>{link.port}</span>
+                <span style={{ color: 'var(--cli-ok)' }}>{link.status}</span>
+                <span style={{ color: 'var(--text-secondary)' }}>{link.service}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-dim)' }}>{link.label} -&gt; </span>
+                  <a href={link.href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-primary)', textDecoration: 'underline', textDecorationColor: 'var(--border)', textUnderlineOffset: '4px', transition: 'all 0.2s' }} onMouseOver={(e) => {e.target.style.color = 'var(--accent)'; e.target.style.textDecorationColor = 'var(--accent)';}} onMouseOut={(e) => {e.target.style.color = 'var(--text-primary)'; e.target.style.textDecorationColor = 'var(--border)';}}>
                     {link.value}
                   </a>
-                </span>
-                <span style={{ color: 'var(--cli-ok)', marginLeft: 'auto' }}>time=14ms</span>
+                </div>
               </div>
             ))}
           </div>
 
-          <footer className="contact-footer" style={{ borderTop: '1px solid var(--cli-border)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', color: 'var(--cli-muted)', fontSize: '0.85rem' }}>
-            <span>--- connections ping statistics ---</span>
-            <span>4 packets transmitted, 4 received, 0% packet loss</span>
-          </footer>
+          <div style={{ color: 'var(--text-dim)', lineHeight: '1.4' }}>
+            Nmap done: 1 IP address (1 host up) scanned in 2.45 seconds<br />
+            <br />
+            <span style={{ color: 'var(--cli-warn)', display: 'inline-block', border: '1px solid var(--cli-warn)', padding: '4px 8px', backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+              Ready to establish secure handshake. Click an endpoint to initiate connection.
+            </span>
+          </div>
         </div>
       </div>
     </section>
