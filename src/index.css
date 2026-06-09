@@ -1093,24 +1093,70 @@ a:hover {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: var(--bg-deep);
+  /* Pure black background for raw terminal feel */
+  background-color: #000000;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   overflow: hidden;
+  /* Smooth blackout fade on mount */
+  opacity: 0;
+  animation: blackoutFade 0.6s ease forwards;
 }
 
+@keyframes blackoutFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Terminal Boot sequence (Typewriter) */
+.ascii-terminal-boot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: #33ff33; /* Classic terminal green */
+  white-space: pre;
+}
+
+.ascii-terminal-boot p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.terminal-ready {
+  font-weight: bold;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Rocket container */
 .ascii-rocket-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Will be translated smoothly by JS */
   will-change: transform;
   padding-bottom: 20vh;
 }
 
+/* Shared typography for rocket and readout */
 .ascii-rocket-body,
 .ascii-flame,
 .ascii-terminal-readout p {
@@ -1118,21 +1164,20 @@ a:hover {
   white-space: pre;
   text-align: center;
   line-height: 1.2;
+  color: #33ff33; /* Terminal green */
 }
 
+/* Rocket Body */
 .ascii-rocket-body {
-  color: var(--text-primary);
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
+/* Exhaust Flame */
 .ascii-flame {
-  /* Very subtle pale violet/lavender tint as requested */
-  color: #e0d6ff;
   font-weight: 700;
-  text-shadow: 0 0 12px rgba(108, 59, 255, 0.6), 0 0 20px rgba(108, 59, 255, 0.3);
 }
 
+/* Final Readout */
 .ascii-terminal-readout {
   position: absolute;
   top: 50%;
@@ -1144,19 +1189,7 @@ a:hover {
 }
 
 .ascii-terminal-readout p {
-  color: var(--text-primary);
   margin: 0;
   font-size: 1rem;
   letter-spacing: 0.05em;
-  animation: typeFlicker 0.1s infinite alternate;
-}
-
-@keyframes typeFlicker {
-  0% {
-    opacity: 0.9;
-  }
-
-  100% {
-    opacity: 1;
-  }
 }
