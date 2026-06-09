@@ -1,36 +1,38 @@
-import DitherBackground from "./DitherBackground";
 import { identity } from "../data/content";
+
+const ASCII_NAME = `
+  ____  _   _    _    ___ _  __
+ / ___|| | | |  / \\  |_ _| |/ /
+ \\___ \\| |_| | / _ \\  | || ' / 
+  ___) |  _  |/ ___ \\ | || . \\ 
+ |____/|_| |_/_/   \\_\\___|_|\\_\\
+`;
 
 export default function Hero() {
   return (
-    <section className="hero-wrapper" id="hero" aria-label="Hero">
-      <DitherBackground />
-
-      <div className="hero-content">
-        <div className="hero-backdrop">
-          <h1 className="hero-name">{identity.name}</h1>
-          <p className="hero-role">{identity.role}</p>
-          <p className="hero-intro">{identity.intro}</p>
-
-          <div className="hero-ctas">
-            <a href="#projects" className="btn-primary">
-              View Work
-            </a>
-            <a href="#contact" className="btn-secondary">
-              Contact
-            </a>
-          </div>
-
-          <div className="hero-prompt">
-            <span>{identity.terminalPrompt} </span>
-            <span className="hero-cursor" aria-hidden="true"></span>
-          </div>
-        </div>
+    <section id="hero" aria-label="Terminal Boot">
+      <div className="cli-prompt-line">
+        <span className="cli-user">guest</span>
+        <span className="cli-char">@</span>
+        <span className="cli-host">portfolio</span>
+        <span className="cli-char">:</span>
+        <span className="cli-path">~</span>
+        <span className="cli-char">$</span>
+        <span className="cli-command">whoami --full</span>
       </div>
 
-      <div className="scroll-indicator" aria-hidden="true">
-        <span>scroll</span>
-        <div className="scroll-line"></div>
+      <div className="cli-output">
+        <div className="cli-ascii-art">{ASCII_NAME}</div>
+        
+        <div className="cli-output-block">
+          <p><strong>NAME:</strong> {identity.name}</p>
+          <p><strong>ROLE:</strong> {identity.role}</p>
+          <p><strong>STATUS:</strong> ONLINE</p>
+          <br />
+          <p>{identity.intro}</p>
+          <br />
+          <p><em>Type `help` or scroll to explore the system.</em></p>
+        </div>
       </div>
     </section>
   );

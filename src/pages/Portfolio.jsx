@@ -9,9 +9,9 @@ import Contact from "../components/Contact";
 
 export default function Portfolio() {
   return (
-    <>
+    <div className="portfolio-cli-layout">
       <Navbar />
-      <main>
+      <main className="cli-container">
         <Hero />
         <About />
         <Projects />
@@ -20,6 +20,6 @@ export default function Portfolio() {
         <Skills />
         <Contact />
       </main>
-    </>
+    </div>
   );
 }

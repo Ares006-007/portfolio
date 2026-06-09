@@ -1193,3 +1193,158 @@ a:hover {
   font-size: 1rem;
   letter-spacing: 0.05em;
 }
+/* ============================================================ */
+/* Portfolio CLI Shared Styles                                  */
+/* ============================================================ */
+
+:root {
+  --cli-bg: #030304;
+  --cli-text: #e0e0e0;
+  --cli-muted: #888890;
+  --cli-accent: #8b5cf6; /* Strong purple */
+  --cli-accent-dim: rgba(139, 92, 246, 0.2);
+  --cli-ok: #10b981;
+  --cli-error: #ef4444;
+  --cli-border: rgba(255, 255, 255, 0.08);
+}
+
+.portfolio-cli-layout {
+  min-height: 100vh;
+  background-color: var(--cli-bg);
+  color: var(--cli-text);
+  font-family: var(--font-mono);
+  padding-bottom: 6rem;
+}
+
+.cli-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.cli-prompt-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+}
+
+.cli-user {
+  color: var(--cli-accent);
+  font-weight: bold;
+}
+
+.cli-host {
+  color: var(--cli-muted);
+}
+
+.cli-path {
+  color: var(--cli-text);
+}
+
+.cli-char {
+  color: var(--cli-accent);
+}
+
+.cli-command {
+  color: #fff;
+  font-weight: 500;
+}
+
+.cli-output {
+  padding-left: 0.5rem;
+  border-left: 2px solid var(--cli-border);
+  margin-bottom: 2rem;
+}
+
+.cli-output-block {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--cli-border);
+  border-radius: 4px;
+}
+
+.cli-ascii-art {
+  font-size: clamp(0.4rem, 1.2vw, 0.8rem);
+  line-height: 1.1;
+  color: var(--cli-accent);
+  white-space: pre;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 10px var(--cli-accent-dim);
+}
+
+/* Scrollbar styling for terminal feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cli-bg);
+  border-left: 1px solid var(--cli-border);
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cli-accent);
+}
+
+
+/* CLI Navbar / Status Bar */
+.cli-status-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #000;
+  border-bottom: 1px solid var(--cli-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.cli-status-left, .cli-status-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cli-status-block {
+  color: var(--cli-muted);
+}
+
+.cli-status-block.highlight {
+  color: var(--cli-accent);
+  font-weight: bold;
+}
+
+.cli-nav-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cli-nav-link {
+  color: var(--cli-text);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.cli-nav-link:hover {
+  color: var(--cli-accent);
+}
+
+.cli-ok {
+  color: var(--cli-ok);
+  font-weight: bold;
+}
+
