@@ -68,14 +68,20 @@ export default function Landing() {
       if (isLaunching) return; // Stop updating if launching
 
       // Smooth interpolation
-      opacityRef.current += (targetOpacityRef.current - opacityRef.current) * 0.1;
-
-      if (buttonRef.current) {
-        const op = opacityRef.current;
-        buttonRef.current.style.opacity = op;
-        buttonRef.current.style.transform = `translate(-50%, -50%) scale(${0.8 + op * 0.2})`;
-        buttonRef.current.style.pointerEvents = op > 0.15 ? "auto" : "none";
+      const diff = targetOpacityRef.current - opacityRef.current;
+      
+      // Optimization: Only update DOM if there's a meaningful change
+      if (Math.abs(diff) > 0.005) {
+        opacityRef.current += diff * 0.1;
+        
+        if (buttonRef.current) {
+          const op = opacityRef.current;
+          buttonRef.current.style.opacity = op;
+          buttonRef.current.style.transform = `translate(-50%, -50%) scale(${0.8 + op * 0.2})`;
+          buttonRef.current.style.pointerEvents = op > 0.15 ? "auto" : "none";
+        }
       }
+      
       animId = requestAnimationFrame(loop);
     };
     loop();
