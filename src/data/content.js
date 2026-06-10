@@ -276,3 +276,15 @@ export const contact = {
   instagram: "https://www.instagram.com/_ajaz_x_o1o/",
 };
 
+export const roadmap = [
+  { id: "RM-01", feature: "Live now / current status", status: "deployed", desc: "Real-time indicator of current activities." },
+  { id: "RM-02", feature: "Command palette / fake shell input", status: "building", desc: "Interactive CLI experience for site navigation." },
+  { id: "RM-03", feature: "Event ops dashboard", status: "building", desc: "Internal views for hackathon & event management." },
+  { id: "RM-04", feature: "Mission log / build log", status: "queued", desc: "Detailed chronological registry of projects and tasks." },
+  { id: "RM-05", feature: "Comment section", status: "queued", desc: "Guestbook for visitors to leave trace logs." },
+  { id: "RM-06", feature: "System map", status: "queued", desc: "Visual map of portfolio architecture and pages." },
+  { id: "RM-07", feature: "Music player", status: "queued", desc: "Lo-fi embedded audio controls." },
+  { id: "RM-08", feature: "Game mode", status: "queued", desc: "Hidden easter egg interactive mode." },
+  { id: "RM-09", feature: "Theme modes", status: "queued", desc: "Different terminal themes (Cyber, Retro, Monochrome)." },
+  { id: "RM-10", feature: "Project deep-dive drawers", status: "queued", desc: "In-depth case studies for major builds." }
+];

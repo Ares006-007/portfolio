@@ -7,6 +7,7 @@ import Events from "../components/Events";
 import Volunteered from "../components/Volunteered";
 import Experience from "../components/Experience";
 import Skills from "../components/Skills";
+import Roadmap from "../components/Roadmap";
 import Contact from "../components/Contact";
 import FaultyTerminal from "../components/FaultyTerminal";
 
@@ -39,6 +40,7 @@ export default function Portfolio() {
           <Volunteered />
           <Experience />
           <Skills />
+          <Roadmap />
           <Contact />
         </main>
       </div>

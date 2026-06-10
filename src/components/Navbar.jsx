@@ -10,7 +10,8 @@ const NAV_ITEMS = [
   { label: "05:VOLUNTEERED", href: "#volunteered" },
   { label: "06:EXPERIENCE", href: "#experience" },
   { label: "07:SKILLS", href: "#skills" },
-  { label: "08:CONTACT", href: "#contact" },
+  { label: "08:ROADMAP", href: "#roadmap" },
+  { label: "09:CONTACT", href: "#contact" },
 ];
 
 const PRIMARY_NAV = [
