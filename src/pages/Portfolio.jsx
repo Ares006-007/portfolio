@@ -4,6 +4,8 @@ import About from "../components/About";
 import Projects from "../components/Projects";
 import Hackathons from "../components/Hackathons";
 import Events from "../components/Events";
+import Volunteered from "../components/Volunteered";
+import Experience from "../components/Experience";
 import Skills from "../components/Skills";
 import Contact from "../components/Contact";
 
@@ -17,6 +19,8 @@ export default function Portfolio() {
         <Projects />
         <Hackathons />
         <Events />
+        <Volunteered />
+        <Experience />
         <Skills />
         <Contact />
       </main>

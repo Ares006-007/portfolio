@@ -2,10 +2,10 @@ import { contact } from "../data/content";
 
 export default function Contact() {
   const links = [
-    { label: "EMAIL", value: contact.email, href: `mailto:${contact.email}`, port: "25/tcp", status: "open", service: "smtp" },
-    { label: "GITHUB", value: contact.github, href: contact.github, port: "443/tcp", status: "open", service: "https-git" },
-    { label: "LINKEDIN", value: contact.linkedin, href: contact.linkedin, port: "443/tcp", status: "open", service: "https-in" },
-    { label: "TWITTER", value: contact.twitter, href: contact.twitter, port: "443/tcp", status: "open", service: "https-x" },
+    { value: contact.email, href: `mailto:${contact.email}`, port: "25/tcp", status: "open", service: "EMAIL" },
+    { value: contact.github, href: contact.github, port: "443/tcp", status: "open", service: "GITHUB" },
+    { value: contact.linkedin, href: contact.linkedin, port: "443/tcp", status: "open", service: "LINKEDIN" },
+    { value: contact.instagram, href: contact.instagram, port: "443/tcp", status: "open", service: "INSTAGRAM" },
   ];
 
   return (
@@ -38,12 +38,11 @@ export default function Contact() {
 
           <div className="contact-links" style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginBottom: '2rem', overflowX: 'auto' }}>
             {links.map((link) => (
-              <div key={link.label} style={{ display: 'grid', gridTemplateColumns: '80px 60px 100px 1fr', gap: '1rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
+              <div key={link.service} style={{ display: 'grid', gridTemplateColumns: '80px 60px 100px 1fr', gap: '1rem', alignItems: 'center', whiteSpace: 'nowrap' }}>
                 <span style={{ color: 'var(--accent)' }}>{link.port}</span>
                 <span style={{ color: 'var(--cli-ok)' }}>{link.status}</span>
                 <span style={{ color: 'var(--text-secondary)' }}>{link.service}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-dim)' }}>{link.label} -&gt; </span>
                   <a href={link.href} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-primary)', textDecoration: 'underline', textDecorationColor: 'var(--border)', textUnderlineOffset: '4px', transition: 'all 0.2s' }} onMouseOver={(e) => {e.target.style.color = 'var(--accent)'; e.target.style.textDecorationColor = 'var(--accent)';}} onMouseOut={(e) => {e.target.style.color = 'var(--text-primary)'; e.target.style.textDecorationColor = 'var(--border)';}}>
                     {link.value}
                   </a>
