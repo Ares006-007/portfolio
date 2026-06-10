@@ -20,7 +20,7 @@ export default function About() {
           <div>[SYS] Assembling data blocks... <span style={{ color: 'var(--cli-ok)' }}>100%</span></div>
         </div>
 
-        <div className="cli-output-block" style={{ border: '1px solid var(--border)', padding: '1.5rem', position: 'relative', backgroundColor: 'rgba(26, 26, 36, 0.4)' }}>
+        <div className="cli-output-block" style={{ border: '1px solid var(--border)', padding: '1.5rem', position: 'relative', backgroundColor: '#08080b' }}>
           <div style={{ position: 'absolute', top: '-10px', left: '10px', backgroundColor: 'var(--bg-deep)', padding: '0 10px', color: 'var(--accent)', fontWeight: 'bold', fontSize: '0.8rem', letterSpacing: '0.1em' }}>
             [ IDENTITY_DATA_STREAM ]
           </div>
