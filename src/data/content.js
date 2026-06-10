@@ -163,7 +163,7 @@ export const activeProcesses = [
   },
   {
     id: "ACT-02",
-    title: "Campfire Organiser / Intern",
+    title: "Campfire Organiser",
     organization: "Hack Club",
     date: "Dec 2025 - Present",
     description: "Organizing Campfire Bengaluru hackathon and events for teens.",

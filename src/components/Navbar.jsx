@@ -13,6 +13,13 @@ const NAV_ITEMS = [
   { label: "08:CONTACT", href: "#contact" },
 ];
 
+const PRIMARY_NAV = [
+  { label: "ABOUT", href: "#about" },
+  { label: "PROJECTS", href: "#projects" },
+  { label: "EXPERIENCE", href: "#experience" },
+  { label: "CONTACT", href: "#contact" },
+];
+
 export default function Navbar() {
   const [time, setTime] = useState("");
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -52,14 +59,24 @@ export default function Navbar() {
 
   return (
     <nav className="cli-status-bar" aria-label="System Navigation" style={{ position: 'sticky' }}>
+      {/* Left: Identity and Path */}
       <div className="cli-status-left">
         <span className="cli-status-block highlight">[ shaik@system ]</span>
+        <span className="cli-status-block hide-on-mobile" style={{ marginLeft: '0.5rem' }}>~/portfolio</span>
       </div>
 
-      <div className="cli-status-center hide-on-mobile" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', color: 'var(--cli-muted)', letterSpacing: '0.1em' }}>
-        ~/portfolio
-      </div>
+      {/* Center: Primary Navigation */}
+      <ul className="cli-nav-links hide-on-mobile" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+        {PRIMARY_NAV.map((item) => (
+          <li key={item.href}>
+            <a href={item.href} className="cli-nav-link">
+              [{item.label}]
+            </a>
+          </li>
+        ))}
+      </ul>
 
+      {/* Right: Status, Time, Hamburger */}
       <div className="cli-status-right" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }} className="hide-on-mobile">
@@ -80,12 +97,13 @@ export default function Navbar() {
         </button>
       </div>
 
+      {/* Expanded Menu Panel */}
       <div 
         id="system-nav" 
         ref={menuRef}
         className={`cli-nav-menu ${isNavOpen ? 'open' : ''}`}
       >
-        <div style={{ color: 'var(--cli-accent)', marginBottom: '0.5rem', fontWeight: 'bold' }}>[ NAVIGATION ]</div>
+        <div style={{ color: 'var(--cli-accent)', marginBottom: '0.5rem', fontWeight: 'bold' }}>[ FULL NAVIGATION ]</div>
         <ul className="cli-nav-menu-links">
           {NAV_ITEMS.map((item) => (
             <li key={item.href}>
